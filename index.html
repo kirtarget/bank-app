@@ -12,12 +12,12 @@
     />
 
     <link rel="stylesheet" href="style.css" />
-    <title>Bankist</title>
+    <title>Банкист</title>
   </head>
   <body>
     <!-- TOP NAVIGATION -->
     <nav>
-      <p class="welcome">Log in to get started</p>
+      <p class="welcome">Войдите, чтобы начать</p>
       <img src="logo.png" alt="Logo" class="logo" />
       <form class="login">
         <input
@@ -40,7 +40,7 @@
       <!-- BALANCE -->
       <div class="balance">
         <div>
-          <p class="balance__label">Current balance</p>
+          <p class="balance__label">Текущий баланс</p>
           <p class="balance__date">
             As of <span class="date">05/03/2037</span>
           </p>
@@ -66,40 +66,40 @@
 
       <!-- SUMMARY -->
       <div class="summary">
-        <p class="summary__label">In</p>
+        <p class="summary__label">Поступления</p>
         <p class="summary__value summary__value--in">0000€</p>
-        <p class="summary__label">Out</p>
+        <p class="summary__label">Вывод</p>
         <p class="summary__value summary__value--out">0000€</p>
-        <p class="summary__label">Interest</p>
+        <p class="summary__label">Баланс</p>
         <p class="summary__value summary__value--interest">0000€</p>
-        <button class="btn--sort">&downarrow; SORT</button>
+        <button class="btn--sort">&downarrow; СОРТИРОВКА</button>
       </div>
 
       <!-- OPERATION: TRANSFERS -->
       <div class="operation operation--transfer">
-        <h2>Transfer money</h2>
+        <h2>Перевести деньги</h2>
         <form class="form form--transfer">
           <input type="text" class="form__input form__input--to" />
           <input type="number" class="form__input form__input--amount" />
           <button class="form__btn form__btn--transfer">&rarr;</button>
-          <label class="form__label">Transfer to</label>
-          <label class="form__label">Amount</label>
+          <label class="form__label">Отправить</label>
+          <label class="form__label">Сумма</label>
         </form>
       </div>
 
       <!-- OPERATION: LOAN -->
       <div class="operation operation--loan">
-        <h2>Request loan</h2>
+        <h2>Запросить перевод</h2>
         <form class="form form--loan">
           <input type="number" class="form__input form__input--loan-amount" />
           <button class="form__btn form__btn--loan">&rarr;</button>
-          <label class="form__label form__label--loan">Amount</label>
+          <label class="form__label form__label--loan">Сумма</label>
         </form>
       </div>
 
       <!-- OPERATION: CLOSE -->
       <div class="operation operation--close">
-        <h2>Close account</h2>
+        <h2>Удалить аккаунт</h2>
         <form class="form form--close">
           <input type="text" class="form__input form__input--user" />
           <input
@@ -108,14 +108,14 @@
             class="form__input form__input--pin"
           />
           <button class="form__btn form__btn--close">&rarr;</button>
-          <label class="form__label">Confirm user</label>
-          <label class="form__label">Confirm PIN</label>
+          <label class="form__label">Имя пользователя</label>
+          <label class="form__label">Подтвердите PIN</label>
         </form>
       </div>
 
       <!-- LOGOUT TIMER -->
       <p class="logout-timer">
-        You will be logged out in <span class="timer">05:00</span>
+        Ваш сеанс завершится через <span class="timer">05:00</span>
       </p>
     </main>
 
