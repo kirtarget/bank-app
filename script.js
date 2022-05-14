@@ -90,6 +90,19 @@ const currencies = new Map([
 const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
 
 /////////////////////////////////////////////////
+// ОБНОВЛЕНИЕ ИНТЕРФЕЙСА
+let currentAccount, timer;
+//ФЕЙКОВЫЙ ЛОГИН
+// currentAccount = account1;
+
+// containerApp.style.opacity = 100;
+
+const currencyFormatter = function (value, locale, currency) {
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: currency,
+  }).format(value.toFixed(2));
+};
 
 // СОЗДАНИЕ ЛОГИНА
 const createUsernames = function (accs) {
@@ -105,7 +118,7 @@ createUsernames(accounts);
 
 // УСТАНОВКА ДАТЫ
 
-const formatMovementDate = function (date) {
+const formatMovementDate = function (date, locale) {
   const calcDaysPassed = (date1, date2) =>
     Math.round(Math.abs(date2 - date1) / (1000 * 60 * 60 * 24));
   const daysPassed = calcDaysPassed(new Date(), date);
@@ -113,16 +126,22 @@ const formatMovementDate = function (date) {
   if (daysPassed === 0) return "Сегодня";
   if (daysPassed === 1) return "Вчера";
   if (daysPassed <= 7) return `${daysPassed} дней назад`;
-  const day = `${date.getDate()}`.padStart(2, 0);
-  const month = `${date.getMonth() + 1}`.padStart(2, 0);
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
+  // const day = `${date.getDate()}`.padStart(2, 0);
+  // const month = `${date.getMonth() + 1}`.padStart(2, 0);
+  // const year = date.getFullYear();
+  // return `${day}/${month}/${year}`;
+  return new Intl.DateTimeFormat(locale).format(date);
 };
 
 // ОТОБРАЖЕНИЕ БАЛАНСА
 const calcDisplayBalance = function (acc) {
   acc.balance = acc.movements.reduce((acc, mov) => acc + mov, 0);
-  labelBalance.textContent = `${acc.balance.toFixed(1)}€`;
+  labelBalance.textContent = currencyFormatter(
+    acc.balance,
+    acc.locale,
+    acc.currency
+  );
+  // `${acc.balance.toFixed(1)}€`;
 };
 
 // ОТОБРАЖЕНИЕ САММАРИ (ВНИЗУ ЭКРАНА)
@@ -138,9 +157,17 @@ const calcDisplaySummary = function (acc) {
     .map((dep) => (dep * acc.interestRate) / 100)
     .reduce((acc, int) => acc + int);
 
-  labelSumInterest.textContent = `${interest.toFixed(1)}€`;
-  labelSumIn.textContent = `${incomes.toFixed(1)}€`;
-  labelSumOut.textContent = `${Math.abs(outcomes).toFixed(1)}€`;
+  labelSumInterest.textContent = currencyFormatter(
+    interest,
+    acc.locale,
+    acc.currency
+  );
+  labelSumIn.textContent = currencyFormatter(incomes, acc.locale, acc.currency);
+  labelSumOut.textContent = currencyFormatter(
+    Math.abs(outcomes),
+    acc.locale,
+    acc.currency
+  );
 };
 
 // ФИЛЬТР ДЕПОЗИТ
@@ -158,40 +185,66 @@ const displayMovements = function (acc, sort = false) {
     ? acc.movements.slice().sort((a, b) => a - b)
     : acc.movements;
 
+  // ОТОБРАЖЕНИЕ ДАТЫ
+  const now = new Date();
+  const options = {
+    hour: "numeric",
+    minute: "numeric",
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+  };
+  // ФОРМАТИРОВАНИЕ ПО АПИ
+  labelDate.textContent = new Intl.DateTimeFormat(acc.locale, options).format(
+    now
+  );
+
   //ДОБАВЛЕНИЕ БЛОКОВ С ОПЕРАЦИЯМИ В HTML
 
   movs.forEach(function (mov, i) {
     const type = mov > 0 ? "deposit" : "withdrawal";
     const date = new Date(acc.movementsDates[i]);
-    const displayDate = formatMovementDate(date);
+    const displayDate = formatMovementDate(date, acc.locale);
+    const formatCur = currencyFormatter(mov, acc.locale, acc.currency);
     const html = `
       <div class="movements__row">
         <div class="movements__type movements__type--${type}">${
       i + 1
     } ${type}</div>
     <div class="movements__date">${displayDate}</div>
-        <div class="movements__value">${mov.toFixed(1)}€</div>
+        <div class="movements__value">${formatCur}</div>
       </div>`;
     containerMovements.insertAdjacentHTML("afterbegin", html);
   });
 };
 
-// ОБНОВЛЕНИЕ ИНТЕРФЕЙСА
-let currentAccount;
-
 const updateUI = () => {
-  const now = new Date();
-  const day = `${now.getDate()}`.padStart(2, 0);
-  const month = `${now.getMonth() + 1}`.padStart(2, 0);
-  const year = now.getFullYear();
-  const hour = `${now.getHours()}`.padStart(2, 0);
-  const min = `${now.getMinutes()}`.padStart(2, 0);
-
-  labelDate.textContent = `${day}/${month}/${year}, ${hour}:${min}`;
-
   displayMovements(currentAccount);
   calcDisplaySummary(currentAccount);
   calcDisplayBalance(currentAccount);
+};
+
+const startLogoutTimer = function () {
+  let time = 300;
+
+  const tick = function () {
+    const min = String(Math.trunc(time / 60)).padStart(2, 0);
+    const sec = String(Math.trunc(time % 60)).padStart(2, 0);
+
+    labelTimer.textContent = `${min}:${sec}`;
+
+    if (time === 0) {
+      clearInterval(timer);
+      currentAccount = "";
+      labelWelcome.textContent = "Войдите, чтобы начать";
+      containerApp.style.opacity = 0;
+    }
+    time--;
+  };
+
+  tick();
+  timer = setInterval(tick, 1000);
+  return timer;
 };
 
 // ЛОГИН
@@ -207,6 +260,8 @@ btnLogin.addEventListener("click", function (e) {
     inputLoginUsername.value = inputLoginPin.value = "";
     inputLoginPin.blur();
     containerApp.style.opacity = 100;
+    if (timer) clearInterval(timer);
+    timer = startLogoutTimer();
     updateUI();
   }
 });
@@ -214,6 +269,8 @@ btnLogin.addEventListener("click", function (e) {
 // ТРАНСФЕР
 btnTransfer.addEventListener("click", function (e) {
   e.preventDefault();
+  clearInterval(timer);
+  timer = startLogoutTimer();
   const amount = +inputTransferAmount.value;
   const receiverAcc = accounts.find(
     (acc) => acc.username === inputTransferTo.value
@@ -256,14 +313,18 @@ btnClose.addEventListener("click", function (e) {
 // ВЗЯТЬ В ДОЛГ У БАНКА
 btnLoan.addEventListener("click", function (e) {
   e.preventDefault();
+  clearInterval(timer);
+  timer = startLogoutTimer();
   const amount = inputLoanAmount.value;
   if (
     amount > 0 &&
     currentAccount.movements.some((mov) => mov >= amount * 0.1)
   ) {
-    currentAccount.movements.push(Math.floor(+amount));
-    currentAccount.movementsDates.push(new Date());
-    updateUI();
+    setTimeout(function () {
+      currentAccount.movements.push(Math.floor(+amount));
+      currentAccount.movementsDates.push(new Date());
+      updateUI();
+    }, 3000);
   }
   inputLoanAmount.value = "";
   inputLoanAmount.blur();
@@ -276,8 +337,3 @@ btnSort.addEventListener("click", function (e) {
   displayMovements(currentAccount, !state);
   state = !state;
 });
-
-//ФЕЙКОВЫЙ ЛОГИН
-currentAccount = account1;
-updateUI();
-containerApp.style.opacity = 100;
